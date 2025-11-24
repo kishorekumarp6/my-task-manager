@@ -1,0 +1,143 @@
+<!--
+  APP COMPONENT TEMPLATE (Phase 2.1 - Routing Integration)
+  
+  PHASE 2 CHANGES:
+  1. Replaced static <app-tasks> with <router-outlet> for dynamic routing
+  2. Added navigation menu with routerLink directives
+  3. Added routerLinkActive for visual feedback on active routes
+  
+  ROUTING CONCEPTS:
+  - <router-outlet>: Placeholder where routed components are rendered
+  - routerLink: Declarative navigation (better than href for SPAs)
+  - routerLinkActive: Applies CSS class to active route link
+-->
+
+<div class="app-container">
+  <header class="app-header" *ngIf="!isLoginPage()">
+    <div class="header-content">
+      <h1>{{ title }}</h1>
+      <p class="subtitle">Manage your tasks efficiently</p>
+    </div>
+    
+    <!-- Navigation Menu: Only show when authenticated -->
+    <nav class="app-nav" *ngIf="authService.isAuthenticated()">
+      <div class="nav-links">
+        <a routerLink="/tasks" routerLinkActive="active" class="nav-link">
+          📋 Tasks
+        </a>
+      </div>
+      
+      <div class="nav-user">
+        <span class="user-name" *ngIf="currentUser">👤 {{ currentUser.full_name }}</span>
+        <button class="btn-logout" (click)="logout()" type="button">
+          🚪 Logout
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Router Outlet: Renders component based on active route -->
+  <div class="content-container">
+    <router-outlet></router-outlet>
+  </div>
+</div>
+
+<style>
+  .app-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .app-header {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #2563eb;
+  }
+
+  .header-content {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .header-content h1 {
+    font-size: 2.5rem;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+  }
+
+  .subtitle {
+    color: #6b7280;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+
+  /* Navigation Styles (Phase 2.1 - Enhanced with Auth) */
+  .app-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .nav-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .user-name {
+    color: #4b5563;
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+
+  .nav-link {
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    color: #4b5563;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s;
+    background: #f9fafb;
+  }
+
+  .nav-link:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+  }
+
+  .nav-link.active {
+    background: #2563eb;
+    color: white;
+  }
+
+  .btn-logout {
+    padding: 0.5rem 1rem;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-logout:hover {
+    background: #dc2626;
+  }
+
+  .content-container {
+    min-height: 400px;
+  }
+</style>

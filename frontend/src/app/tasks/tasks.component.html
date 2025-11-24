@@ -1,0 +1,484 @@
+<div class="tasks-container">
+  <!-- Phase 2.5: Error Message Display -->
+  <div *ngIf="errorMessage" class="error-banner">
+    <span class="error-icon">⚠️</span>
+    <span>{{ errorMessage }}</span>
+    <button (click)="errorMessage = ''" class="error-close">×</button>
+  </div>
+
+  <!-- Add Task Card -->
+  <div class="card add-task-card">
+    <h2 class="card-title">
+      <span class="icon">➕</span>
+      Add New Task
+    </h2>
+    <form class="add-task-form" (submit)="addTask(); $event.preventDefault()">
+      <div class="form-group">
+        <label for="task-title">Title <span class="required">*</span></label>
+        <input 
+          id="task-title"
+          type="text" 
+          [(ngModel)]="newTask.title" 
+          name="title"
+          placeholder="Enter task title" 
+          class="form-input"
+          [disabled]="isLoading"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="task-description">Description</label>
+        <textarea 
+          id="task-description"
+          [(ngModel)]="newTask.description" 
+          name="description"
+          placeholder="Enter task description"
+          class="form-input form-textarea"
+          [disabled]="isLoading"
+          rows="3"
+        ></textarea>
+      </div>
+      <div class="form-legend">
+        <span class="required">*</span> - fields are mandatory
+      </div>
+      <!-- Phase 2.5: Button with loading state -->
+      <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+        <span *ngIf="!isLoading" class="btn-icon">✓</span>
+        <span *ngIf="isLoading" class="spinner-small"></span>
+        <span *ngIf="!isLoading">Add Task</span>
+        <span *ngIf="isLoading">Adding...</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Tasks List Card -->
+  <div class="card tasks-list-card">
+    <h2 class="card-title">
+      <span class="icon">📋</span>
+      Your Tasks
+      <span class="task-count">{{ tasks.length }}</span>
+    </h2>
+    
+    <!-- Phase 2.5: Loading Spinner -->
+    <div *ngIf="isLoading && tasks.length === 0" class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading tasks...</p>
+    </div>
+
+    <div *ngIf="!isLoading && tasks.length === 0" class="empty-state">
+      <div class="empty-icon">📝</div>
+      <p>No tasks yet. Create your first task above!</p>
+    </div>
+
+    <ul class="tasks-list" *ngIf="tasks.length > 0">
+      <li *ngFor="let task of tasks" class="task-item" [class.completed]="task.done">
+        <div class="task-checkbox">
+          <input 
+            type="checkbox" 
+            [id]="'task-' + task.id"
+            [(ngModel)]="task.done" 
+            (change)="updateTask(task)"
+            class="checkbox-input"
+          />
+          <label [for]="'task-' + task.id" class="checkbox-label"></label>
+        </div>
+        <div class="task-content">
+          <!-- Phase 2.1: Add routerLink for navigation to detail view -->
+          <h3 class="task-title">
+            <a [routerLink]="['/tasks', task.id]" class="task-link">{{ task.title }}</a>
+          </h3>
+          <p class="task-description" *ngIf="task.description">{{ task.description }}</p>
+        </div>
+        <button 
+          (click)="deleteTask(task.id)" 
+          class="btn btn-danger btn-icon-only"
+          aria-label="Delete task"
+          title="Delete task"
+        >
+          <span class="btn-icon">🗑️</span>
+        </button>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<app-confirmation-modal
+  [(show)]="showDeleteModal"
+  title="Delete Task"
+  message="Are you sure you want to delete this task? This action cannot be undone."
+  confirmText="Delete"
+  cancelText="Cancel"
+  (onConfirm)="confirmDelete()"
+  (onCancel)="cancelDelete()">
+</app-confirmation-modal>
+
+<style>
+  /* Phase 2.5: Error Banner */
+  .error-banner {
+    background: #fef2f2;
+    color: #991b1b;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-left: 4px solid #dc2626;
+    animation: slideIn 0.3s ease-out;
+  }
+
+  .error-icon {
+    font-size: 1.25rem;
+  }
+
+  .error-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #991b1b;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .error-close:hover {
+    color: #7f1d1d;
+  }
+
+  /* Phase 2.5: Loading Spinner */
+  .loading-container {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6b7280;
+  }
+
+  .spinner {
+    border: 4px solid #f3f4f6;
+    border-top: 4px solid #2563eb;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  .spinner-small {
+    display: inline-block;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .tasks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+  }
+
+  .card:hover {
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .card-title {
+    font-size: 1.5rem;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+  }
+
+  .icon {
+    font-size: 1.5rem;
+  }
+
+  .task-count {
+    margin-left: auto;
+    background: #2563eb;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  /* Add Task Form */
+  .add-task-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-group label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .required {
+    color: #dc2626;
+    font-weight: bold;
+    margin-left: 2px;
+  }
+
+  .form-legend {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-style: italic;
+    margin-top: -0.5rem;
+  }
+
+  .form-input {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .form-textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: inherit;
+  }
+
+  .btn-primary {
+    background: #2563eb;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-danger {
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .btn-danger:hover {
+    background: #fecaca;
+    transform: scale(1.05);
+  }
+
+  .btn-icon-only {
+    min-width: 40px;
+    padding: 0.5rem;
+  }
+
+  .btn-icon {
+    font-size: 1.1rem;
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #9ca3af;
+  }
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .empty-state p {
+    font-size: 1.1rem;
+  }
+
+  /* Tasks List */
+  .tasks-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .task-item:hover {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+  }
+
+  .task-item.completed {
+    opacity: 0.6;
+  }
+
+  .task-item.completed .task-title {
+    text-decoration: line-through;
+    color: #9ca3af;
+  }
+
+  /* Custom Checkbox */
+  .task-checkbox {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .checkbox-input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .checkbox-label {
+    display: block;
+    width: 24px;
+    height: 24px;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .checkbox-input:checked + .checkbox-label {
+    background: #2563eb;
+    border-color: #2563eb;
+  }
+
+  .checkbox-input:checked + .checkbox-label::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .checkbox-label:hover {
+    border-color: #2563eb;
+  }
+
+  /* Task Content */
+  .task-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 0.25rem 0;
+    word-wrap: break-word;
+  }
+
+  /* Phase 2.1: Task link styling */
+  .task-link {
+    color: #2563eb;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .task-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+  }
+
+  .task-description {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.5;
+    word-wrap: break-word;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 640px) {
+    .card {
+      padding: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+    }
+
+    .task-item {
+      padding: 0.75rem;
+    }
+
+    .btn {
+      padding: 0.625rem 1.25rem;
+      font-size: 0.9rem;
+    }
+  }
+</style>

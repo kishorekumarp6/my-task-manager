@@ -1,0 +1,270 @@
+<!--
+  TASK DETAIL TEMPLATE (Phase 2 - Routing & Reactive Forms)
+  
+  This template demonstrates:
+  1. Reactive Form Binding: [formGroup] and formControlName
+  2. Form Validation Display: Show errors when control is invalid
+  3. Loading States: Disable buttons and show spinner during API calls
+  4. Error Display: Show error messages from component
+  5. Navigation: routerLink back to task list
+-->
+
+<div class="task-detail-container">
+  <!-- Navigation Breadcrumb -->
+  <div class="breadcrumb">
+    <a routerLink="/tasks" class="breadcrumb-link">← Back to Tasks</a>
+  </div>
+
+  <!-- Page Header -->
+  <div class="detail-header">
+    <h2>Edit Task</h2>
+  </div>
+
+  <!-- Loading Spinner (Phase 2.5) -->
+  <div *ngIf="isLoading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading task details...</p>
+  </div>
+
+  <!-- Error Message Display (Phase 2.5) -->
+  <div *ngIf="errorMessage" class="error-message">
+    <span class="error-icon">⚠</span>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Reactive Form (Phase 2.3) -->
+  <form [formGroup]="taskForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading && !errorMessage">
+    <!-- Title Field with Validation -->
+    <div class="form-group">
+      <label for="title">Title *</label>
+      <input
+        id="title"
+        type="text"
+        formControlName="title"
+        class="form-control"
+        [class.invalid]="taskForm.get('title')?.invalid && taskForm.get('title')?.touched"
+      />
+      <!-- Validation Error Messages -->
+      <div class="validation-error" *ngIf="taskForm.get('title')?.invalid && taskForm.get('title')?.touched">
+        <span *ngIf="taskForm.get('title')?.errors?.['required']">Title is required</span>
+        <span *ngIf="taskForm.get('title')?.errors?.['minlength']">Title must be at least 3 characters</span>
+      </div>
+    </div>
+
+    <!-- Description Field -->
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea
+        id="description"
+        formControlName="description"
+        class="form-control"
+        rows="4"
+      ></textarea>
+    </div>
+
+    <!-- Done Checkbox -->
+    <div class="form-group checkbox-group">
+      <label>
+        <input type="checkbox" formControlName="done" />
+        <span>Mark as done</span>
+      </label>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="button-group">
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="taskForm.invalid || isLoading"
+      >
+        <span *ngIf="!isLoading">Save Changes</span>
+        <span *ngIf="isLoading">Saving...</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-danger"
+        (click)="onDelete()"
+        [disabled]="isLoading"
+      >
+        Delete Task
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        [disabled]="isLoading"
+      >
+        Cancel
+      </button>
+    </div>
+  </form>
+</div>
+
+<style>
+  .task-detail-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .breadcrumb {
+    margin-bottom: 1.5rem;
+  }
+
+  .breadcrumb-link {
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+
+  .breadcrumb-link:hover {
+    text-decoration: underline;
+  }
+
+  .detail-header h2 {
+    color: #1f2937;
+    margin: 0 0 2rem 0;
+    font-size: 1.8rem;
+  }
+
+  /* Loading Spinner Styles */
+  .loading-spinner {
+    text-align: center;
+    padding: 3rem;
+  }
+
+  .spinner {
+    border: 4px solid #f3f4f6;
+    border-top: 4px solid #2563eb;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Error Message Styles */
+  .error-message {
+    background: #fef2f2;
+    color: #991b1b;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #dc2626;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .error-icon {
+    font-size: 1.2rem;
+  }
+
+  /* Form Styles */
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #374151;
+    font-weight: 500;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: #2563eb;
+  }
+
+  .form-control.invalid {
+    border-color: #dc2626;
+  }
+
+  .validation-error {
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+
+  .checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  .checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+
+  /* Button Styles */
+  .button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: #2563eb;
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: #1d4ed8;
+  }
+
+  .btn-danger {
+    background: #dc2626;
+    color: white;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: #b91c1c;
+  }
+
+  .btn-secondary {
+    background: #6b7280;
+    color: white;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: #4b5563;
+  }
+</style>
